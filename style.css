@@ -1,0 +1,348 @@
+/* ─────────────────────────────────────────
+   CALC-9000 · Retro-Futuristic Terminal UI
+   ───────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:          #080c0a;
+  --shell-bg:    #0d1210;
+  --shell-edge:  #1a2e22;
+  --display-bg:  #040f07;
+  --green:       #00ff6a;
+  --green-dim:   #00c952;
+  --green-glow:  rgba(0, 255, 106, 0.18);
+  --green-faint: rgba(0, 255, 106, 0.06);
+  --amber:       #ffaa00;
+  --red:         #ff3c3c;
+  --text:        #d4ffe3;
+  --muted:       #3a6648;
+  --btn-num-bg:  #111a14;
+  --btn-num-border: #1e3326;
+  --btn-op-bg:   #0a1f12;
+  --btn-op-border: #0f4025;
+  --btn-eq-bg:   var(--green);
+  --btn-util-bg: #0e1a12;
+  --btn-util-border: #1c3024;
+  --font-display: 'Orbitron', monospace;
+  --font-mono:    'Share Tech Mono', monospace;
+  --radius-shell: 20px;
+  --radius-btn:   10px;
+}
+
+/* ── Body & Background ── */
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,255,106,.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── CRT Scanlines Overlay ── */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,.18) 3px,
+    rgba(0,0,0,.18) 4px
+  );
+  animation: flicker 8s infinite;
+}
+
+@keyframes flicker {
+  0%, 97%, 100% { opacity: 1; }
+  98%           { opacity: .85; }
+  99%           { opacity: .95; }
+}
+
+/* ── Wrapper & Shell ── */
+.wrapper {
+  animation: boot-in .6s cubic-bezier(.22,.68,0,1.2) both;
+}
+
+@keyframes boot-in {
+  from { opacity: 0; transform: scale(.92) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.calc-shell {
+  width: 320px;
+  background: var(--shell-bg);
+  border: 1px solid var(--shell-edge);
+  border-radius: var(--radius-shell);
+  padding: 22px 20px 24px;
+  box-shadow:
+    0 0 0 1px rgba(0,255,106,.05) inset,
+    0 0 40px rgba(0,255,106,.06),
+    0 40px 80px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.03);
+  position: relative;
+}
+
+/* ── Brand Header ── */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 2px;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.brand-accent {
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green);
+}
+
+.brand-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green), 0 0 16px var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .4; transform: scale(.7); }
+}
+
+/* ── Display Panel ── */
+.display-panel {
+  position: relative;
+  background: var(--display-bg);
+  border: 1px solid rgba(0,255,106,.15);
+  border-radius: 12px;
+  padding: 18px 16px 14px;
+  margin-bottom: 18px;
+  min-height: 108px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-shadow:
+    0 0 20px rgba(0,255,106,.06) inset,
+    0 0 30px rgba(0,0,0,.5);
+  overflow: hidden;
+}
+
+.display-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,255,106,.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Corner brackets */
+.display-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--green-dim);
+  border-style: solid;
+  opacity: .6;
+}
+.display-corner.tl { top: 5px;  left: 5px;  border-width: 1px 0 0 1px; }
+.display-corner.tr { top: 5px;  right: 5px; border-width: 1px 1px 0 0; }
+.display-corner.bl { bottom: 5px; left: 5px;  border-width: 0 0 1px 1px; }
+.display-corner.br { bottom: 5px; right: 5px; border-width: 0 1px 1px 0; }
+
+.display-inner {
+  position: relative;
+}
+
+.expression {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  letter-spacing: .05em;
+  min-height: 16px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--green);
+  text-align: right;
+  letter-spacing: -.01em;
+  line-height: 1;
+  text-shadow: 0 0 10px var(--green), 0 0 30px rgba(0,255,106,.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color .15s, text-shadow .15s;
+}
+
+.result.error {
+  color: var(--red);
+  text-shadow: 0 0 10px var(--red);
+  font-size: 22px;
+}
+
+/* Blinking cursor */
+.cursor {
+  display: inline-block;
+  width: 3px;
+  height: 32px;
+  background: var(--green);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  box-shadow: 0 0 8px var(--green);
+  animation: blink .9s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Button Grid ── */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+}
+
+/* ── Base Button ── */
+.btn {
+  height: 64px;
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  position: relative;
+  overflow: hidden;
+  transition: transform .1s, box-shadow .1s;
+  outline: none;
+}
+
+.btn:active {
+  transform: scale(.93) translateY(1px);
+}
+
+/* Ripple effect */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background .12s;
+  border-radius: inherit;
+}
+.btn:hover::after { background: rgba(255,255,255,.04); }
+
+/* ── Number Buttons ── */
+.btn-num {
+  background: var(--btn-num-bg);
+  color: var(--text);
+  border: 1px solid var(--btn-num-border);
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+.btn-num:hover {
+  border-color: rgba(0,255,106,.2);
+  box-shadow: 0 0 10px rgba(0,255,106,.08), 0 2px 6px rgba(0,0,0,.4);
+}
+
+.btn-zero { grid-column: span 2; }
+
+/* ── Operator Buttons ── */
+.btn-op {
+  background: var(--btn-op-bg);
+  color: var(--green-dim);
+  border: 1px solid var(--btn-op-border);
+  font-size: 20px;
+  box-shadow: 0 0 12px rgba(0,255,106,.06), 0 2px 6px rgba(0,0,0,.4);
+  text-shadow: 0 0 8px rgba(0,255,106,.5);
+}
+.btn-op:hover {
+  background: rgba(0,255,106,.06);
+  border-color: rgba(0,255,106,.35);
+  box-shadow: 0 0 18px rgba(0,255,106,.15), 0 2px 6px rgba(0,0,0,.4);
+  color: var(--green);
+}
+
+/* ── Utility Buttons (AC, ±, %) ── */
+.btn-util {
+  background: var(--btn-util-bg);
+  color: var(--amber);
+  border: 1px solid var(--btn-util-border);
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  text-shadow: 0 0 8px rgba(255,170,0,.4);
+}
+.btn-util:hover {
+  border-color: rgba(255,170,0,.3);
+  box-shadow: 0 0 12px rgba(255,170,0,.1), 0 2px 6px rgba(0,0,0,.4);
+}
+
+/* ── Equals Button ── */
+.btn-eq {
+  background: var(--green);
+  color: #030d06;
+  font-size: 22px;
+  border: none;
+  box-shadow:
+    0 0 20px rgba(0,255,106,.4),
+    0 0 40px rgba(0,255,106,.15),
+    0 4px 12px rgba(0,0,0,.4);
+}
+.btn-eq:hover {
+  box-shadow:
+    0 0 28px rgba(0,255,106,.55),
+    0 0 50px rgba(0,255,106,.2),
+    0 4px 12px rgba(0,0,0,.4);
+}
+.btn-eq:active {
+  box-shadow:
+    0 0 12px rgba(0,255,106,.3),
+    0 2px 6px rgba(0,0,0,.3);
+}
+
+/* ── Flash animation on display update ── */
+@keyframes flash-green {
+  0%   { opacity: .3; }
+  100% { opacity: 1; }
+}
+.flash { animation: flash-green .15s ease-out; }
